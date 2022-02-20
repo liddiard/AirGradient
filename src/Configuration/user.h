@@ -6,6 +6,10 @@ extern const char* ntp_server;
 //screen refresh
 extern const int screenUpdateFrequencyMs;
 
+//push metrics to server
+extern const int sendMetricsFrequencyMs;
+extern const String metricsServerUrl;
+
 //Id of the device for Prometheus
 extern const char * deviceId;
 

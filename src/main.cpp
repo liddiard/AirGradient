@@ -6,6 +6,7 @@
 #include "main.h"
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
+#include <ESP8266HTTPClient.h>
 
 #include <Wire.h>
 #include "SSD1306Wire.h"
@@ -33,6 +34,7 @@ auto metrics = std::make_shared<MetricGatherer>(-2);
 auto aqiCalculator = std::make_shared<AQICalculator>(metrics);
 auto server = std::make_unique<PrometheusServer>(port, deviceId, metrics, aqiCalculator);
 Ticker updateScreenTicker;
+Ticker sendMetricsTicker;
 
 
 void setup() {
@@ -90,6 +92,7 @@ void setup() {
 
     showTextRectangle("Listening To", WiFi.localIP().toString() + ":" + String(port), true);
     updateScreenTicker.attach_ms_scheduled(screenUpdateFrequencyMs, updateScreen);
+    sendMetricsTicker.attach_ms_scheduled(sendMetricsFrequencyMs, sendMetrics);
 }
 
 void loop() {
@@ -139,15 +142,32 @@ void updateScreen() {
                 showTextRectangle("HUM", String(data.HUM, 1) + "%", false);
                 break;
             }
-
-        case 4:
-            if (!(sensorType & Measurement::Particle)) {
-                auto aqi = aqiCalculator->isAQIAvailable() ? String(aqiCalculator->getAQI(), 1) : "N/A";
-                showTextRectangle("AQI", aqi, false);
-                break;
-            }
-
     }
 
-    counter = ++counter % 5;
+    counter = ++counter % 4;
+}
+
+// push sensor data to a webserver
+void sendMetrics() {
+    auto data = metrics->getData();
+    String payload = 
+        "{\"wifi\":" + String(WiFi.RSSI())               + "," +
+        "\"pm02\":"  + String(data.PARTICLE_DATA.PM_2_5) + "," +
+        "\"rco2\":"  + String(data.GAS_DATA.CO2)         + "," +
+        "\"atmp\":"  + String(data.TMP)                  + "," +
+        "\"rhum\":"  + String(data.HUM)                  + "}";
+
+    // send payload
+    Serial.println(payload);
+    String POSTURL = metricsServerUrl + "sensors/airgradient:" + String(ESP.getChipId(), HEX) + "/measures";
+    Serial.println(POSTURL);
+    WiFiClient client;
+    HTTPClient http;
+    http.begin(client, POSTURL);
+    http.addHeader("content-type", "application/json");
+    int httpCode = http.POST(payload);
+    String response = http.getString();
+    Serial.println(httpCode);
+    Serial.println(response);
+    http.end();
 }

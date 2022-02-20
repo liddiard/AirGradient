@@ -4,4 +4,5 @@
 
 void showTextRectangle(const String& ln1, const String& ln2, boolean small);
 void updateScreen();
+void sendMetrics();
 #endif
