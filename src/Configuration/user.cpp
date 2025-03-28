@@ -1,18 +1,18 @@
 #include "user.h"
 
-//screen refresh
+// screen refresh
 const int screenUpdateFrequencyMs = 4000;
 
-//push metrics to serverss
+// push metrics to servers
 const int sendMetricsFrequencyMs = 30000;
 const String metricsServerUrl = "http://hw.airgradient.com/";
 
-//Id of the device for Prometheus
-const char * deviceId = "";
+// ID of the device for Prometheus
+const char *deviceId = "";
 
-//Wifi information
-const char* ssid = "";
-const char* password = "";
+// WiFi information – replace with your own and DON'T commit to git
+const char *ssid = "";
+const char *password = "";
 const uint16_t port = 80;
 
 #ifdef staticip
@@ -21,4 +21,4 @@ IPAddress gateway(192, 168, 42, 1);
 IPAddress subnet(255, 255, 255, 0);
 #endif
 
-const char* ntp_server = "pool.ntp.org";
+const char *ntp_server = "pool.ntp.org";
